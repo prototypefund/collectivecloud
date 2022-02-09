@@ -73,6 +73,7 @@
 <script>
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { ActionButton, Actions, AppNavigationItem, Multiselect } from '@nextcloud/vue'
+import { mapGetters } from 'vuex'
 import { GET_CIRCLES, NEW_COLLECTIVE } from '../../store/actions'
 import EmojiPicker from '@nextcloud/vue/dist/Components/EmojiPicker'
 import EmoticonOutline from 'vue-material-design-icons/EmoticonOutline'
@@ -104,6 +105,9 @@ export default {
 		}
 	},
 	computed: {
+		...mapGetters([
+			'randomCollectiveEmoji',
+		]),
 		name() {
 			if (this.pickCircle) {
 				return this.circle
@@ -141,6 +145,7 @@ export default {
 
 		startCreateCollective(e) {
 			this.editing = true
+			this.emoji = this.randomCollectiveEmoji()
 			this.$nextTick(() => {
 				this.$refs.nameField.focus()
 			})
@@ -148,6 +153,7 @@ export default {
 
 		startSelectCircle(e) {
 			this.editing = true
+			this.emoji = this.randomCollectiveEmoji()
 			this.pickCircle = true
 			this.$nextTick(() => {
 				this.$refs.circleSelector.$el.focus()
