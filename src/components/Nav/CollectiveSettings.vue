@@ -4,6 +4,10 @@
 		:aria-label="t('collectives', 'Collective settings')"
 		:show-navigation="true">
 		<AppSettingsSection :title="t('collectives', 'Details')">
+			<div class="subsection-header">
+				{{ t('collectives', 'Emoji and name') }}
+			</div>
+
 			<div class="collective-name">
 				<EmojiPicker
 					:show-preview="true"
@@ -33,6 +37,29 @@
 						:class="{ 'icon-loading-small': loading('renameCollective') }"
 						:disabled="!isCollectiveOwner(collective)">
 				</form>
+			</div>
+
+			<div class="subsection-header subsection-header__second">
+				{{ t('collectives', 'Default page order') }}
+			</div>
+
+			<div class="page-order">
+				<CheckboxRadioSwitch
+					:checked.sync="pageOrder"
+					:value="String(pageOrders.byTimestamp)"
+					:loading="loading('updateCollectivePageOrder_' + String(pageOrders.byTimestamp))"
+					name="page_order_timestamp"
+					type="radio">
+					{{ t('collectives', 'Sort by timestamp') }}
+				</CheckboxRadioSwitch>
+				<CheckboxRadioSwitch
+					:checked.sync="pageOrder"
+					:value="String(pageOrders.byTitle)"
+					:loading="loading('updateCollectivePageOrder_' + String(pageOrders.byTitle))"
+					name="page_order_title"
+					type="radio">
+					{{ t('collectives', 'Sort by title') }}
+				</CheckboxRadioSwitch>
 			</div>
 		</AppSettingsSection>
 
@@ -127,6 +154,7 @@
 
 <script>
 import { memberLevels } from '../../constants'
+import { pageOrders } from '../../util/sortOrders'
 import { mapGetters, mapMutations, mapState } from 'vuex'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import AppSettingsDialog from '@nextcloud/vue/dist/Components/AppSettingsDialog'
@@ -174,10 +202,12 @@ export default {
 	data() {
 		return {
 			memberLevels,
+			pageOrders,
 			newCollectiveName: this.collective.name,
 			showSettings: false,
 			editPermissions: String(this.collective.editPermissionLevel),
 			sharePermissions: String(this.collective.sharePermissionLevel),
+			pageOrder: String(this.collective.pageOrder),
 		}
 	},
 
@@ -247,6 +277,21 @@ export default {
 				this.sharePermissions = String(this.collective.sharePermissionLevel)
 				this.done('updateCollectiveSharePermissions_' + permission)
 				showError('Could not update sharing permissions')
+				throw error
+			})
+		},
+		pageOrder(val, oldVal) {
+			const pageOrder = String(val)
+			this.load('updateCollectivePageOrder_' + pageOrder)
+			const collective = { ...this.collective }
+			collective.pageOrder = parseInt(pageOrder)
+			this.$store.dispatch(UPDATE_COLLECTIVE, collective).then(() => {
+				showSuccess(t('collectives', 'Default page order updated'))
+				this.done('updateCollectivePageOrder_' + pageOrder)
+			}).catch((error) => {
+				showError('Could not update default page order')
+				this.pageOrder = String(this.collective.pageOrder)
+				this.done('updateCollectivePageOrder_' + pageOrder)
 				throw error
 			})
 		},
